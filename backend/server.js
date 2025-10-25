@@ -1,4 +1,4 @@
-const express = require('express');
+how do i logconst express = require('express');
 const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
@@ -16,8 +16,10 @@ const corsOptions = {
     const allowedOrigins = [
       'http://localhost:19000',  // Expo web
       'http://localhost:19006',  // Expo development
+      'http://localhost:8081',   // Metro bundler
       'http://127.0.0.1:19000',
       'http://127.0.0.1:19006',
+      'http://127.0.0.1:8081',
       'exp://127.0.0.1:19000',  // Expo Go
       'http://192.168.1.0/24',  // Local network range
       'https://your-production-domain.com' // Replace with actual production domain

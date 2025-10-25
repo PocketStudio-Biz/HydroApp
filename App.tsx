@@ -4,16 +4,15 @@ import { StyleSheet, Text, View, FlatList, ActivityIndicator, Button, TextInput,
 import axios from 'axios';
 
 // Cross-platform API configuration
-const getApiBaseUrl = () => {
-  if (__DEV__) {
-    // Development environment - use localhost for both platforms
-    return 'http://localhost:3000/api';
-  }
-  // Production environment - would use actual deployed backend URL
-  return 'https://your-production-api.com/api';
-};
+const API_BASE_URL = __DEV__
+  ? 'http://localhost:3001/api'
+  : 'https://your-production-api.com/api';
 
-const API_BASE_URL = getApiBaseUrl();
+// Configured axios instance with timeout and headers
+const apiClient = axios.create({
+  timeout: 10000,
+  headers: { 'Content-Type': 'application/json' }
+});
 
 interface DataItem {
   id: number;
@@ -35,7 +34,7 @@ export default function App() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/data`);
+      const response = await apiClient.get(`${API_BASE_URL}/data`);
       setData(response.data.data);
       setError(null);
     } catch (err) {
@@ -47,17 +46,32 @@ export default function App() {
   };
 
   const addItem = async () => {
-    if (!newItemName || !newItemValue) {
-      alert('Please enter both name and value');
+    if (!newItemName.trim()) {
+      alert('Please enter a name');
+      return;
+    }
+    if (newItemValue.trim() === '') {
+      alert('Please enter a value');
+      return;
+    }
+    let parsedValue: number;
+    try {
+      parsedValue = parseFloat(newItemValue);
+    } catch (err) {
+      alert('Please enter a valid number for value');
+      return;
+    }
+    if (isNaN(parsedValue) || !isFinite(parsedValue)) {
+      alert('Please enter a valid number for value');
       return;
     }
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/data`, {
+      const response = await apiClient.post(`${API_BASE_URL}/data`, {
         name: newItemName,
-        value: newItemValue
+        value: parsedValue
       });
-      
+
       setData([...data, response.data.data]);
       setNewItemName('');
       setNewItemValue('');
@@ -88,7 +102,7 @@ export default function App() {
     <View style={styles.container}>
       <Text style={styles.title}>HydroApp</Text>
       <Text style={styles.subtitle}>React Native + Backend Demo</Text>
-      
+
       {error && (
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
@@ -120,7 +134,7 @@ export default function App() {
         style={styles.list}
         contentContainerStyle={styles.listContent}
       />
-      
+
       <StatusBar style="auto" />
     </View>
   );

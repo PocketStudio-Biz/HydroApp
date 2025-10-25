@@ -6,6 +6,12 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// In-memory data store (persists for the lifetime of the server process)
+const items = [
+  { id: 1, name: 'Sample Item 1', value: 100 },
+  { id: 2, name: 'Sample Item 2', value: 200 },
+  { id: 3, name: 'Sample Item 3', value: 300 }
+];
 const DEFAULT_ALLOWED_ORIGINS = [
   'http://localhost:19000',
   'http://localhost:19006',
@@ -91,31 +97,27 @@ app.get('/api/health', (req, res) => {
 });
 
 app.get('/api/data', (req, res) => {
-  // Sample data endpoint
   res.json({
-    data: [
-      { id: 1, name: 'Sample Item 1', value: 100 },
-      { id: 2, name: 'Sample Item 2', value: 200 },
-      { id: 3, name: 'Sample Item 3', value: 300 }
-    ],
-    count: 3
+    data: items,
+    count: items.length
   });
 });
 
 app.post('/api/data', (req, res) => {
   const { name, value } = req.body;
-  
-  if (!name || !value) {
+
+  if (!name || typeof value === 'undefined') {
     return res.status(400).json({ error: 'Name and value are required' });
   }
-  
+
   const newItem = {
     id: Date.now(),
     name,
-    value: parseInt(value),
+    value: parseInt(value, 10),
     createdAt: new Date().toISOString()
   };
-  
+
+  items.push(newItem);
   res.status(201).json({ message: 'Data created successfully', data: newItem });
 });
 
@@ -139,3 +141,33 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
+
+// Fetch single item
+app.get('/api/data/:id', (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const item = items.find(i => i.id === id);
+  if (!item) return res.status(404).json({ error: 'Item not found' });
+  res.json({ data: item });
+});
+
+// Update item
+app.put('/api/data/:id', (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const { name, value } = req.body;
+  const idx = items.findIndex(i => i.id === id);
+  if (idx === -1) return res.status(404).json({ error: 'Item not found' });
+
+  if (typeof name !== 'undefined') items[idx].name = name;
+  if (typeof value !== 'undefined') items[idx].value = parseInt(value, 10);
+
+  res.json({ message: 'Data updated successfully', data: items[idx] });
+});
+
+// Delete item
+app.delete('/api/data/:id', (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const idx = items.findIndex(i => i.id === id);
+  if (idx === -1) return res.status(404).json({ error: 'Item not found' });
+  const removed = items.splice(idx, 1)[0];
+  res.json({ message: 'Data deleted successfully', data: removed });
+});

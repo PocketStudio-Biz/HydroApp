@@ -63,7 +63,8 @@ const corsOptions = {
       return callback(null, true);
     }
 
-    return callback(new Error(`Origin ${origin} not allowed by CORS`));
+    console.warn(`[CORS] Denied origin: ${origin}`);
+    return callback(new Error(`Origin ${origin} not allowed by CORS`), false);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -110,10 +111,15 @@ app.post('/api/data', (req, res) => {
     return res.status(400).json({ error: 'Name and value are required' });
   }
 
+  const parsedValue = Number(value);
+  if (!Number.isFinite(parsedValue)) {
+    return res.status(400).json({ error: 'Value must be a valid number' });
+  }
+
   const newItem = {
     id: Date.now(),
     name,
-    value: parseInt(value, 10),
+    value: parsedValue,
     createdAt: new Date().toISOString()
   };
 
@@ -121,24 +127,7 @@ app.post('/api/data', (req, res) => {
   res.status(201).json({ message: 'Data created successfully', data: newItem });
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
-});
-
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
-});
-
-app.listen(PORT, () => {
-  console.info('Allowed CORS origins:', allowedOrigins.map(({ pattern }) => pattern));
-  console.log(`🚀 HydroApp Backend Server running on port ${PORT}`);
-  console.log(`📡 Health check: http://localhost:${PORT}/api/health`);
-  console.log(`🌐 CORS enabled for cross-platform compatibility`);
-  console.log(`📱 Ready for iOS, Android, and Web platforms`);
-});
+// Handlers moved below routes to ensure correct routing order
 
 module.exports = app;
 
@@ -158,7 +147,13 @@ app.put('/api/data/:id', (req, res) => {
   if (idx === -1) return res.status(404).json({ error: 'Item not found' });
 
   if (typeof name !== 'undefined') items[idx].name = name;
-  if (typeof value !== 'undefined') items[idx].value = parseInt(value, 10);
+  if (typeof value !== 'undefined') {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) {
+      return res.status(400).json({ error: 'Value must be a valid number' });
+    }
+    items[idx].value = parsed;
+  }
 
   res.json({ message: 'Data updated successfully', data: items[idx] });
 });
@@ -170,4 +165,24 @@ app.delete('/api/data/:id', (req, res) => {
   if (idx === -1) return res.status(404).json({ error: 'Item not found' });
   const removed = items.splice(idx, 1)[0];
   res.json({ message: 'Data deleted successfully', data: removed });
+});
+
+// 404 handler (placed after all routes)
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
+// Error handling middleware (after routes)
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something went wrong!' });
+});
+
+// Start server last
+app.listen(PORT, () => {
+  console.info('Allowed CORS origins:', allowedOrigins.map(({ pattern }) => pattern));
+  console.log(`🚀 HydroApp Backend Server running on port ${PORT}`);
+  console.log(`📡 Health check: http://localhost:${PORT}/api/health`);
+  console.log(`🌐 CORS enabled for cross-platform compatibility`);
+  console.log(`📱 Ready for iOS, Android, and Web platforms`);
 });

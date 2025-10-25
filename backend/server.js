@@ -1,4 +1,4 @@
-how do i logconst express = require('express');
+const express = require('express');
 const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
@@ -6,30 +6,58 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Enhanced CORS configuration for cross-platform compatibility
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, Postman, etc.)
-    if (!origin) return callback(null, true);
+const DEFAULT_ALLOWED_ORIGINS = [
+  'http://localhost:19000',
+  'http://localhost:19006',
+  'http://localhost:8081',
+  'http://127.0.0.1:19000',
+  'http://127.0.0.1:19006',
+  'http://127.0.0.1:8081',
+  'exp://127.0.0.1:19000'
+];
 
-    // Allow localhost for development on different platforms
-    const allowedOrigins = [
-      'http://localhost:19000',  // Expo web
-      'http://localhost:19006',  // Expo development
-      'http://localhost:8081',   // Metro bundler
-      'http://127.0.0.1:19000',
-      'http://127.0.0.1:19006',
-      'http://127.0.0.1:8081',
-      'exp://127.0.0.1:19000',  // Expo Go
-      'http://192.168.1.0/24',  // Local network range
-      'https://your-production-domain.com' // Replace with actual production domain
-    ];
+const toArray = (value = '') =>
+  value
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean);
 
-    if (allowedOrigins.some(allowed => origin.includes(allowed.replace('/24', '')))) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
+const escapeForRegex = (pattern) =>
+  pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
+
+const buildAllowedOrigins = () => {
+  const envOrigins = toArray(process.env.CORS_ALLOWED_ORIGINS || process.env.CORS_ORIGIN);
+  const merged = Array.from(new Set([...DEFAULT_ALLOWED_ORIGINS, ...envOrigins]));
+
+  return merged.map((pattern) => {
+    if (pattern === '*') {
+      return { pattern, test: () => true };
     }
+
+    if (pattern.includes('*')) {
+      const regex = new RegExp(`^${escapeForRegex(pattern)}$`);
+      return { pattern, test: (origin) => regex.test(origin) };
+    }
+
+    return { pattern, test: (origin) => origin === pattern };
+  });
+};
+
+const allowedOrigins = buildAllowedOrigins();
+
+const corsOptions = {
+  origin(origin, callback) {
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    const isAllowed = allowedOrigins.some(({ test }) => test(origin));
+
+    if (isAllowed) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`Origin ${origin} not allowed by CORS`));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -103,6 +131,7 @@ app.use((req, res) => {
 });
 
 app.listen(PORT, () => {
+  console.info('Allowed CORS origins:', allowedOrigins.map(({ pattern }) => pattern));
   console.log(`🚀 HydroApp Backend Server running on port ${PORT}`);
   console.log(`📡 Health check: http://localhost:${PORT}/api/health`);
   console.log(`🌐 CORS enabled for cross-platform compatibility`);

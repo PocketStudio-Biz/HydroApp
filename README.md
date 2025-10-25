@@ -82,7 +82,7 @@ HydroApp/
 │   └── server.js          # Express server (backend)
 ├── assets/                # Icons & images
 ├── index.ts               # Entry file for Expo
-├── app.json               # Expo config (name, bundle id, splash, etc.)
+├── app.config.ts          # Expo config driven by environment variables
 ├── eas.json               # EAS build configuration
 ├── package.json           # Scripts & dependencies
 ├── .env                   # Backend environment vars
@@ -90,13 +90,18 @@ HydroApp/
 ```
 
 ## Environment Configuration
-Create `.env` in the project root (already created) and ensure values are set:
+Create `.env` in the project root (already added) and ensure values are set:
 ```
 PORT=3000
 NODE_ENV=development
-CORS_ORIGIN=http://localhost:19000
+EXPO_PUBLIC_API_PORT=3001
+# Optional: point to remote API when deploying
+# EXPO_PUBLIC_API_BASE_URL=https://api.example.com/api
+CORS_ALLOWED_ORIGINS=http://localhost:19000,http://localhost:19006,http://localhost:8081,exp://127.0.0.1:19000
 ```
-Note: Adjust `CORS_ORIGIN` to match your Expo dev URL when testing on device (e.g., http://<your-local-ip>:19000).
+Notes:
+- Adjust `CORS_ALLOWED_ORIGINS` to include any Expo dev URLs or production domains you expect.
+- `EXPO_PUBLIC_API_BASE_URL` is injected into the mobile app at build time; omit it for local development to fall back to your machine's backend.
 
 ## API Endpoints (Backend)
 Base URL: `http://localhost:3000`
@@ -121,7 +126,7 @@ curl -X POST http://localhost:3000/api/data \
 ```
 
 ## Frontend Integration
-`App.tsx` uses Axios to call the backend at `http://localhost:3000`. If you test on a physical device, replace `localhost` with your computer’s LAN IP (e.g., `http://192.168.X.X:3000`).
+`App.tsx` reads `EXPO_PUBLIC_API_BASE_URL` (or the Expo config `extra.apiBaseUrl`) to determine which backend to call. Without that variable it falls back to `http://<local-ip>:3001/api`, automatically choosing `10.0.2.2` for Android emulators. Override the value in `.env` or your CI environment when building for production.
 
 ## Deployment (Apple App Store)
 We use EAS (Expo Application Services) for building and submission.
@@ -131,9 +136,9 @@ We use EAS (Expo Application Services) for building and submission.
 npx eas login
 ```
 
-2) Update `app.json`
-- Set `ios.bundleIdentifier` to your bundle ID (e.g., `com.yourcompany.hydroapp`)
-- Ensure `slug` and other metadata match your App Store Connect app record
+2) Update `app.config.ts` or provide environment variables
+- Set `EXPO_PUBLIC_IOS_BUNDLE_IDENTIFIER`, `EXPO_PUBLIC_ANDROID_PACKAGE`, and `EXPO_PUBLIC_APP_NAME` in `.env` or your CI environment
+- Ensure `EXPO_PUBLIC_APP_SLUG`, `EXPO_PUBLIC_APP_VERSION`, and `EAS_PROJECT_ID` match your App Store Connect record
 
 3) Build (production)
 ```bash

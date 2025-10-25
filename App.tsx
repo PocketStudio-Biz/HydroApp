@@ -1,15 +1,43 @@
 import React, { useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, FlatList, ActivityIndicator, Button, TextInput, Platform } from 'react-native';
+import Constants from 'expo-constants';
 import axios from 'axios';
 
-// Cross-platform API configuration
-const API_BASE_URL = __DEV__
-  ? 'http://localhost:3001/api'
-  : 'https://your-production-api.com/api';
+type ExpoExtra = {
+  apiBaseUrl?: string;
+  api?: {
+    baseUrl?: string;
+  };
+};
+
+const expoConfig = Constants.expoConfig ?? Constants.manifest ?? {};
+const expoExtra = (expoConfig.extra ?? {}) as ExpoExtra;
+
+const FALLBACK_HOST = Platform.select({
+  ios: 'localhost',
+  android: '10.0.2.2',
+  default: '127.0.0.1'
+});
+
+const envApiBaseUrl = (process.env.EXPO_PUBLIC_API_BASE_URL ??
+  process.env.EXPO_PUBLIC_API_URL) as string | undefined;
+
+const FALLBACK_PORT = (process.env.EXPO_PUBLIC_API_PORT as string | undefined) ?? '3001';
+
+const API_BASE_URL =
+  envApiBaseUrl ??
+  expoExtra.apiBaseUrl ??
+  expoExtra.api?.baseUrl ??
+  `http://${FALLBACK_HOST}:${FALLBACK_PORT}/api`;
+
+if (__DEV__) {
+  console.log('[HydroApp] Using API base URL:', API_BASE_URL);
+}
 
 // Configured axios instance with timeout and headers
 const apiClient = axios.create({
+  baseURL: API_BASE_URL,
   timeout: 10000,
   headers: { 'Content-Type': 'application/json' }
 });
@@ -34,7 +62,7 @@ export default function App() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get(`${API_BASE_URL}/data`);
+      const response = await apiClient.get('/data');
       setData(response.data.data);
       setError(null);
     } catch (err) {
@@ -67,7 +95,7 @@ export default function App() {
     }
 
     try {
-      const response = await apiClient.post(`${API_BASE_URL}/data`, {
+      const response = await apiClient.post('/data', {
         name: newItemName,
         value: parsedValue
       });

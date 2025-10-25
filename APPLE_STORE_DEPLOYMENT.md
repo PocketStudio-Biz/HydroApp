@@ -8,7 +8,7 @@
 - [ ] Set up Two-Factor Authentication
 
 ### 2. App Configuration ✅
-- [ ] Update `app.json` with your app details
+- [ ] Update `app.config.ts` or provide environment variables
 - [ ] Set unique bundle identifier
 - [ ] Configure app icons and splash screens
 - [ ] Set app name and version
@@ -22,33 +22,18 @@
 
 ### Step 1: Configure Your App Details
 
-1. **Update app.json**:
-```json
-{
-  "expo": {
-    "name": "Your App Name",
-    "slug": "your-app-slug",
-    "ios": {
-      "bundleIdentifier": "com.yourcompany.yourapp"
-    }
-  }
-}
-```
+1. **Provide app metadata**: set these environment variables or edit `app.config.ts`:
+   - `EXPO_PUBLIC_APP_NAME`
+   - `EXPO_PUBLIC_APP_SLUG`
+   - `EXPO_PUBLIC_IOS_BUNDLE_IDENTIFIER`
+   - `EXPO_PUBLIC_ANDROID_PACKAGE`
+   - `EXPO_PUBLIC_APP_VERSION`
 
-2. **Update eas.json** with your Apple credentials:
-```json
-{
-  "submit": {
-    "production": {
-      "ios": {
-        "appleId": "your-apple-id@icloud.com",
-        "ascAppId": "1234567890",
-        "appleTeamId": "ABCD123456"
-      }
-    }
-  }
-}
-```
+2. **Set EAS submission credentials** via environment variables:
+   - `APPLE_ID`
+   - `APP_STORE_CONNECT_APP_ID`
+   - `APPLE_TEAM_ID`
+   (They populate the `${...}` placeholders in `eas.json`.)
 
 ### Step 2: Install Required Tools
 

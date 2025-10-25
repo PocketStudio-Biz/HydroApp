@@ -9,9 +9,9 @@
 - ✅ EAS CLI installed and configured
 
 ### 2. **App Store Configuration**
-- ✅ `app.json` updated with App Store settings
+- ✅ `app.config.ts` wired to environment variables
 - ✅ `eas.json` configured for production builds
-- ✅ Bundle identifier set: `com.yourcompany.hydroapp`
+- ✅ Bundle identifier placeholders ready for `EXPO_PUBLIC_IOS_BUNDLE_IDENTIFIER`
 - ✅ Build configuration optimized for App Store
 
 ### 3. **Deployment Tools Created**
@@ -23,11 +23,11 @@
 
 ### **Before You Deploy:**
 
-1. **Update Configuration Files**:
+1. **Update Configuration Values**:
    ```bash
    # Edit these files with your actual information:
-   - app.json (bundle identifier, app name)
-   - eas.json (Apple ID, Team ID, App Store Connect App ID)
+   - app.config.ts (or supply environment variables)
+   - eas.json credentials via APPLE_ID / APP_STORE_CONNECT_APP_ID / APPLE_TEAM_ID
    ```
 
 2. **Apple Developer Account Setup**:
@@ -62,30 +62,18 @@ eas submit --platform ios --profile production
 
 ## 📋 **Important Configuration Updates Needed**
 
-### **1. Update app.json**:
-```json
-{
-  "expo": {
-    "ios": {
-      "bundleIdentifier": "com.YOUR_COMPANY.hydroapp"
-    }
-  }
-}
-```
+### **1. Provide runtime config**:
+- `EXPO_PUBLIC_APP_NAME`
+- `EXPO_PUBLIC_APP_SLUG`
+- `EXPO_PUBLIC_APP_VERSION`
+- `EXPO_PUBLIC_IOS_BUNDLE_IDENTIFIER`
+- `EXPO_PUBLIC_ANDROID_PACKAGE`
 
-### **2. Update eas.json**:
-```json
-{
-  "submit": {
-    "production": {
-      "ios": {
-        "appleId": "YOUR_APPLE_ID@icloud.com",
-        "ascAppId": "YOUR_APP_STORE_CONNECT_APP_ID",
-        "appleTeamId": "YOUR_APPLE_TEAM_ID"
-      }
-    }
-  }
-}
+### **2. Export EAS submission variables**:
+```bash
+export APPLE_ID="YOUR_APPLE_ID@icloud.com"
+export APP_STORE_CONNECT_APP_ID="YOUR_APP_STORE_CONNECT_APP_ID"
+export APPLE_TEAM_ID="YOUR_APPLE_TEAM_ID"
 ```
 
 ## 🔧 **Current Status**

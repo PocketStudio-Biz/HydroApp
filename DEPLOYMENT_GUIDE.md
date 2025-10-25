@@ -22,10 +22,17 @@ eas login
 ```
 
 ### 3. Configure EAS Build
-Update the `eas.json` file with your Apple Developer information:
-- Replace `your-apple-id@example.com` with your actual Apple ID
-- Replace `your-app-store-connect-app-id` with your App Store Connect App ID
-- Replace `your-apple-team-id` with your Apple Team ID
+Set the following environment variables (locally or in your CI) so credentials are not stored in source control:
+- `APPLE_ID`
+- `APP_STORE_CONNECT_APP_ID`
+- `APPLE_TEAM_ID`
+
+They map to the `${...}` placeholders in `eas.json`. You can set them temporarily when building:
+```bash
+export APPLE_ID="name@example.com"
+export APP_STORE_CONNECT_APP_ID="1234567890"
+export APPLE_TEAM_ID="ABCDE12345"
+```
 
 ### 4. Build for iOS
 ```bash
@@ -55,32 +62,27 @@ For production deployment, consider using:
 - AWS
 - Digital Ocean
 
-Update the `API_BASE_URL` in `App.tsx` to point to your production backend.
+Set `EXPO_PUBLIC_API_BASE_URL` in your build environment (or `.env.production`) to point to your production backend. The mobile app reads this value automatically.
 
 ## Configuration Files
 
 ### Environment Variables
-Create a `.env` file in the backend directory:
+Configure `.env` in the project root:
 ```
 PORT=3000
 NODE_ENV=production
-DATABASE_URL=your_production_database_url
+EXPO_PUBLIC_API_PORT=3001
+EXPO_PUBLIC_API_BASE_URL=https://api.example.com/api
+CORS_ALLOWED_ORIGINS=https://app.example.com,https://studio.expo.dev
 ```
 
 ### iOS Specific Configuration
-Update `app.json` with your app details:
-```json
-{
-  "expo": {
-    "name": "HydroApp",
-    "slug": "hydroapp",
-    "version": "1.0.0",
-    "ios": {
-      "bundleIdentifier": "com.yourcompany.hydroapp"
-    }
-  }
-}
-```
+Provide app identifiers either via `.env` or by editing `app.config.ts`:
+- `EXPO_PUBLIC_IOS_BUNDLE_IDENTIFIER`
+- `EXPO_PUBLIC_ANDROID_PACKAGE`
+- `EXPO_PUBLIC_APP_NAME`
+- `EXPO_PUBLIC_APP_SLUG`
+- `EXPO_PUBLIC_APP_VERSION`
 
 ## Testing
 

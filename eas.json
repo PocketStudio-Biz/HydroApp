@@ -26,13 +26,13 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "your-apple-id@example.com",
-        "ascAppId": "your-app-store-connect-app-id",
-        "appleTeamId": "your-apple-team-id"
+        "appleId": "${APPLE_ID}",
+        "ascAppId": "${APP_STORE_CONNECT_APP_ID}",
+        "appleTeamId": "${APPLE_TEAM_ID}"
       }
     }
   },
   "updates": {
-    "url": "https://u.expo.dev/your-project-id"
+    "url": "https://u.expo.dev/${EAS_PROJECT_ID}"
   }
 }

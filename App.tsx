@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, FlatList, ActivityIndicator, Button, TextInput, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
 import axios from 'axios';
 
@@ -66,7 +67,10 @@ export default function App() {
       setData(response.data.data);
       setError(null);
     } catch (err) {
-      setError('Failed to fetch data from server');
+      const errorMessage = axios.isAxiosError(err)
+        ? `Failed to fetch data: ${err.response?.data?.error || err.message}`
+        : 'Failed to fetch data from server';
+      setError(errorMessage);
       console.error('Error fetching data:', err);
     } finally {
       setLoading(false);
@@ -82,13 +86,8 @@ export default function App() {
       alert('Please enter a value');
       return;
     }
-    let parsedValue: number;
-    try {
-      parsedValue = parseFloat(newItemValue);
-    } catch (err) {
-      alert('Please enter a valid number for value');
-      return;
-    }
+
+    const parsedValue = parseFloat(newItemValue);
     if (isNaN(parsedValue) || !isFinite(parsedValue)) {
       alert('Please enter a valid number for value');
       return;
@@ -105,7 +104,10 @@ export default function App() {
       setNewItemValue('');
       setError(null);
     } catch (err) {
-      setError('Failed to add item');
+      const errorMessage = axios.isAxiosError(err)
+        ? `Failed to add item: ${err.response?.data?.error || err.message}`
+        : 'Failed to add item';
+      setError(errorMessage);
       console.error('Error adding item:', err);
     }
   };
@@ -119,15 +121,15 @@ export default function App() {
 
   if (loading) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <ActivityIndicator size="large" color="#0000ff" />
         <Text>Loading data...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Text style={styles.title}>HydroApp</Text>
       <Text style={styles.subtitle}>React Native + Backend Demo</Text>
 
@@ -164,7 +166,7 @@ export default function App() {
       />
 
       <StatusBar style="auto" />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -172,8 +174,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
-    paddingTop: Platform.OS === 'ios' ? 50 : 30, // Different padding for iOS vs Android/Windows
     paddingHorizontal: 20,
+    paddingTop: 10,
   },
   title: {
     fontSize: 32,
